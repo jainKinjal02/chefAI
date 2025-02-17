@@ -1,25 +1,26 @@
-import logo from './logo.svg';
-import './App.css';
+import React from 'react';
+import styled from 'styled-components';
+import { AIProvider } from './context/AIContext';
+import Header from './components/common/Header';
+import ChatInterface from './components/chat/ChatInterface';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
-function App() {
+const AppContainer = styled.div`
+  min-height: 100vh;
+  background: #f5f5f5;
+`;
+
+const App = () => {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <AIProvider>
+      <ErrorBoundary>
+        <AppContainer>
+          <Header />
+          <ChatInterface />
+        </AppContainer>
+      </ErrorBoundary>
+    </AIProvider>
   );
-}
+};
 
 export default App;
