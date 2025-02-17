@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import useSpeechRecognition from '../hooks/useSpeechRecognition';
-import useSpeechSynthesis from '../hooks/useSpeechSynthesis';
+import useSpeechRecognition from '../../hooks/useSpeechRecognition';
+import useSpeechSynthesis from '../../hooks/useSpeechSynthesis';
 import styled from 'styled-components';
 
 const VoiceControlContainer = styled.div`

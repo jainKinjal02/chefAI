@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
-import { useAI } from '../context/AIContext';
+import { useAI } from '../../context/AIContext';
 import VoiceControl from './VoiceControl';
-import useSpeechSynthesis from '../hooks/useSpeechSynthesis';
+import useSpeechSynthesis from '../../hooks/useSpeechSynthesis';
 
 const ChatContainer = styled.div`
   display: flex;
