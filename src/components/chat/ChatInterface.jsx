@@ -91,11 +91,11 @@ const ChatInterface = () => {
     // Get AI response
     const response = await askAI(query);
     
-    // Add AI response
-    setMessages(prev => [...prev, { text: response, isUser: false }]);
+    // Add AI response - use the display property from the response object
+    setMessages(prev => [...prev, { text: response.display, isUser: false }]);
     
-    // Speak the response
-    speak(response);
+    // Speak the response - use the display property
+    speak(response.display);
   };
   
   // Scroll to bottom when messages change

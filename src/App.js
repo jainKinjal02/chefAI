@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { AIProvider } from './context/AIContext';
 import Header from './components/common/Header';
 import ChatInterface from './components/chat/ChatInterface';
-import ErrorBoundary from './components/common/ErrorBoundary';
+import ErrorBoundary from './components/common/errorBoundary';
 
 const AppContainer = styled.div`
   min-height: 100vh;
