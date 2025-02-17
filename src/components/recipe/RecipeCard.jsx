@@ -1,202 +1,124 @@
-// RecipeCard.jsx
 import React, { useState } from 'react';
 import styled from 'styled-components';
+import { Clock, Users, Save, PlayCircle } from 'lucide-react';
 import { useAI } from '../../context/AIContext';
-import useSpeechSynthesis from '../../hooks/useSpeechSynthesis';
+import RecipeStep from './RecipeStep';
+import IngredientList from './IngredientList';
 
-const RecipeContainer = styled.div`
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin: 1rem 0;
+const Card = styled.div`
   background: white;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-`;
-
-const RecipeHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-`;
-
-const StepContainer = styled.div`
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   margin: 1rem 0;
+  overflow: hidden;
 `;
 
-const Timer = styled.div`
+const Header = styled.div`
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+`;
+
+const Title = styled.h2`
+  margin: 0 0 1rem 0;
+  color: #2c3e50;
+  font-size: 1.5rem;
+`;
+
+const MetaInfo = styled.div`
+  display: flex;
+  gap: 1.5rem;
+  color: #666;
+  font-size: 0.9rem;
+`;
+
+const Content = styled.div`
+  padding: 1.5rem;
+`;
+
+const ActionBar = styled.div`
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  border-top: 1px solid #e9ecef;
+  background: #f8f9fa;
+`;
+
+const ActionButton = styled.button`
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: ${props => props.active ? '#ff5252' : '#666'};
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  background: ${props => props.primary ? '#4285f4' : '#e9ecef'};
+  color: ${props => props.primary ? 'white' : '#666'};
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    opacity: 0.9;
+  }
 `;
 
 const RecipeCard = ({ recipe }) => {
-  const [activeStep, setActiveStep] = useState(0);
-  const [timers, setTimers] = useState({});
-  const { speak, cancel } = useSpeechSynthesis();
-  const { askAI } = useAI();
+  const [currentStep, setCurrentStep] = useState(0);
+  const { saveRecipe, startCooking } = useAI();
 
-  const startTimer = (stepIndex, duration) => {
-    const timerId = setInterval(() => {
-      setTimers(prev => {
-        const timeLeft = (prev[stepIndex] || duration) - 1;
-        if (timeLeft <= 0) {
-          clearInterval(timerId);
-          speak(`Timer for step ${stepIndex + 1} is complete!`);
-          return { ...prev, [stepIndex]: 0 };
-        }
-        return { ...prev, [stepIndex]: timeLeft };
-      });
-    }, 1000);
-
-    setTimers(prev => ({ ...prev, [stepIndex]: duration }));
-    return timerId;
+  const handleStartCooking = () => {
+    startCooking(recipe);
+    setCurrentStep(0);
   };
 
-  const handleStepComplete = async (stepIndex) => {
-    setActiveStep(stepIndex + 1);
-    const nextStep = recipe.steps[stepIndex + 1];
-    if (nextStep) {
-      speak(`Next step: ${nextStep.instruction}`);
-    } else {
-      const feedback = await askAI("What should I look for to know if my dish is properly cooked?");
-      speak(feedback);
-    }
+  const handleSave = () => {
+    saveRecipe(recipe);
   };
 
   return (
-    <RecipeContainer>
-      <RecipeHeader>
-        <h2>{recipe.title}</h2>
+    <Card>
+      <Header>
+        <Title>{recipe.title}</Title>
+        <MetaInfo>
+          <span>
+            <Clock size={16} />
+            {recipe.prepTime} prep • {recipe.cookTime} cook
+          </span>
+          <span>
+            <Users size={16} />
+            Serves {recipe.servings}
+          </span>
+        </MetaInfo>
+      </Header>
+
+      <Content>
+        <IngredientList ingredients={recipe.ingredients} servings={recipe.servings} />
+        
         <div>
-          <span>Prep: {recipe.prepTime}</span>
-          <span>Cook: {recipe.cookTime}</span>
+          <h3>Instructions</h3>
+          {recipe.steps.map((step, index) => (
+            <RecipeStep
+              key={index}
+              step={step}
+              stepNumber={index + 1}
+              isActive={index === currentStep}
+              onComplete={() => setCurrentStep(index + 1)}
+            />
+          ))}
         </div>
-      </RecipeHeader>
+      </Content>
 
-      <div>
-        <h3>Ingredients</h3>
-        <ul>
-          {recipe.ingredients.map((ingredient, index) => (
-            <li key={index}>
-              {ingredient.amount} {ingredient.unit} {ingredient.name}
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <div>
-        <h3>Instructions</h3>
-        {recipe.steps.map((step, index) => (
-          <StepContainer key={index}>
-            <div style={{ opacity: index === activeStep ? 1 : 0.6 }}>
-              <h4>Step {index + 1}</h4>
-              <p>{step.instruction}</p>
-              {step.timer && (
-                <Timer active={timers[index] > 0}>
-                  <button onClick={() => startTimer(index, step.timer)}>
-                    {timers[index] ? `${timers[index]}s` : `Start ${step.timer}s timer`}
-                  </button>
-                </Timer>
-              )}
-            </div>
-            {index === activeStep && (
-              <button onClick={() => handleStepComplete(index)}>
-                Complete Step
-              </button>
-            )}
-          </StepContainer>
-        ))}
-      </div>
-    </RecipeContainer>
+      <ActionBar>
+        <ActionButton primary onClick={handleStartCooking}>
+          <PlayCircle size={20} />
+          Start Cooking
+        </ActionButton>
+        <ActionButton onClick={handleSave}>
+          <Save size={20} />
+          Save Recipe
+        </ActionButton>
+      </ActionBar>
+    </Card>
   );
 };
 
-// promptTemplates.js
-export const recipePrompt = (query) => `
-You are a cooking assistant. Please provide a detailed recipe with the following structure:
-{
-  "title": "Recipe Name",
-  "prepTime": "preparation time",
-  "cookTime": "cooking time",
-  "ingredients": [
-    { "amount": number, "unit": "unit", "name": "ingredient name" }
-  ],
-  "steps": [
-    { 
-      "instruction": "step instruction",
-      "timer": optional_time_in_seconds
-    }
-  ]
-}
-
-Recipe request: ${query}
-`;
-
-export const techniquePrompt = (query) => `
-You are a cooking expert. Please explain the following cooking technique:
-- What it is
-- When to use it
-- Step-by-step instructions
-- Common mistakes to avoid
-- Pro tips
-
-Technique: ${query}
-`;
-
-// CookingTechnique.jsx
-import React from 'react';
-import styled from 'styled-components';
-
-const TechniqueContainer = styled.div`
-  padding: 1.5rem;
-  background: #f8f9fa;
-  border-radius: 8px;
-  margin: 1rem 0;
-`;
-
-const TechniqueSection = styled.div`
-  margin: 1rem 0;
-`;
-
-const CookingTechnique = ({ technique }) => {
-  return (
-    <TechniqueContainer>
-      <h2>{technique.name}</h2>
-      <TechniqueSection>
-        <h3>Description</h3>
-        <p>{technique.description}</p>
-      </TechniqueSection>
-      
-      <TechniqueSection>
-        <h3>Step-by-Step Instructions</h3>
-        <ol>
-          {technique.steps.map((step, index) => (
-            <li key={index}>{step}</li>
-          ))}
-        </ol>
-      </TechniqueSection>
-      
-      <TechniqueSection>
-        <h3>Common Mistakes</h3>
-        <ul>
-          {technique.mistakes.map((mistake, index) => (
-            <li key={index}>{mistake}</li>
-          ))}
-        </ul>
-      </TechniqueSection>
-      
-      <TechniqueSection>
-        <h3>Pro Tips</h3>
-        <ul>
-          {technique.tips.map((tip, index) => (
-            <li key={index}>{tip}</li>
-          ))}
-        </ul>
-      </TechniqueSection>
-    </TechniqueContainer>
-  );
-};
-
-export default CookingTechnique;
+export default RecipeCard;

@@ -1,75 +1,70 @@
-import React, { useState, useEffect } from 'react';
-import useSpeechRecognition from '../../hooks/useSpeechRecognition';
-import useSpeechSynthesis from '../../hooks/useSpeechSynthesis';
+import React from 'react';
 import styled from 'styled-components';
+import { Mic, MicOff } from 'lucide-react';
+import useSpeechRecognition from '../../hooks/useSpeechRecognition';
 
 const VoiceControlContainer = styled.div`
   display: flex;
   align-items: center;
-  margin: 1rem 0;
+  padding: 0.5rem;
+  border-top: 1px solid #e0e0e0;
 `;
 
 const MicButton = styled.button`
-  background: ${props => props.isListening ? '#ff5252' : '#4CAF50'};
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 60px;
-  height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  background: ${props => props.isListening ? '#ff4444' : '#4285f4'};
+  color: white;
   cursor: pointer;
-  transition: all 0.3s ease;
-  
+  transition: all 0.2s ease;
+
   &:hover {
     opacity: 0.9;
   }
+
+  &:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  }
 `;
 
-const VoiceStatus = styled.div`
+const StatusText = styled.span`
   margin-left: 1rem;
-  font-size: 0.9rem;
   color: #666;
+  font-size: 0.9rem;
 `;
 
 const VoiceControl = ({ onQuerySubmit }) => {
   const { transcript, isListening, startListening, stopListening } = useSpeechRecognition();
-  const { speak, speaking, cancel } = useSpeechSynthesis();
-  
-  useEffect(() => {
-    if (transcript && !isListening) {
-      onQuerySubmit(transcript);
-    }
-  }, [transcript, isListening, onQuerySubmit]);
 
-  const toggleListening = () => {
+  const handleMicClick = () => {
     if (isListening) {
       stopListening();
+      if (transcript) {
+        onQuerySubmit(transcript);
+      }
     } else {
-      if (speaking) cancel();
       startListening();
     }
   };
 
-  const speakResponse = (response) => {
-    // Extract just the text content from the response
-    const plainText = response.replace(/<[^>]*>/g, '');
-    speak(plainText);
-  };
-
   return (
     <VoiceControlContainer>
-      <MicButton 
-        onClick={toggleListening} 
+      <MicButton
+        onClick={handleMicClick}
         isListening={isListening}
         aria-label={isListening ? 'Stop listening' : 'Start listening'}
       >
-        <i className={isListening ? 'fas fa-stop' : 'fas fa-microphone'} />
+        {isListening ? <MicOff size={24} /> : <Mic size={24} />}
       </MicButton>
-      <VoiceStatus>
-        {isListening ? 'Listening...' : speaking ? 'Speaking...' : 'Click to speak'}
-      </VoiceStatus>
+      <StatusText>
+        {isListening ? 'Listening...' : 'Click to speak'}
+      </StatusText>
     </VoiceControlContainer>
   );
 };
