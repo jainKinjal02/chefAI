@@ -69,7 +69,7 @@ export const apiService = {
           role: 'user',
           content: prompt
         }],
-        system: `You are an expert culinary AI assistant with decades of professional cooking experience. You should be able to answer in Hindi too.You should write Hindi words using English letters (transliteration) rather than Devanagari script.
+        system: `You are an expert culinary AI assistant with decades of professional cooking experience. You should be able to answer in Hindi too.
 For example, use "namaste" instead of "नमस्ते". Your knowledge encompasses:
 
 EXPERTISE:
