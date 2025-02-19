@@ -13,6 +13,37 @@ module.exports = {
             500: '#e05e5e',
           },
         },
+        animation: {
+          fadeIn: 'fadeIn 0.5s ease-in',
+          messageSlide: 'messageSlide 0.3s ease-out',
+          slideInRight: 'slideInRight 0.5s ease-out',
+        },
+        keyframes: {
+          fadeIn: {
+            '0%': { opacity: '0' },
+            '100%': { opacity: '1' },
+          },
+          messageSlide: {
+            '0%': { 
+              opacity: '0',
+              transform: 'translateY(10px)'
+            },
+            '100%': { 
+              opacity: '1',
+              transform: 'translateY(0)'
+            },
+          },
+          slideInRight: {
+            '0%': { 
+              opacity: '0',
+              transform: 'translateX(20px)'
+            },
+            '100%': { 
+              opacity: '1',
+              transform: 'translateX(0)'
+            },
+          },
+        },
       },
     },
     plugins: [],
