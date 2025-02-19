@@ -1,10 +1,47 @@
-import React, { useState , useCallback} from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { ChefHat, ArrowRight } from 'lucide-react';
 import cookingBackground from '../assets/bg-photo.jpeg';
+import backgroundVideo from '../assets/background-video.mp4';
+import styled from 'styled-components';
+
+// Styled components for video background
+const VideoContainer = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: -1;
+`;
+
+const BackgroundVideo = styled.video`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  min-width: 100%;
+  min-height: 100%;
+  width: auto;
+  height: auto;
+  transform: translateX(-50%) translateY(-50%);
+  object-fit: cover;
+  filter: brightness(1.3);
+  transition: opacity 0.5s ease-in-out;
+`;
+
+const VideoOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7); /* Adjust opacity here */
+`;
 
 const LandingPage = ({ onStartChat }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const videoRef = useRef(null);
   
   // Debounced version of onStartChat to prevent double-clicks
   const handleStartChat = useCallback((query) => {
@@ -45,19 +82,34 @@ const LandingPage = ({ onStartChat }) => {
   ];
 
   return (
-    <div className="min-h-screen font-poppins flex flex-col"
-         style={{
-          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url(${cookingBackground})`,
-           backgroundSize: 'cover',
-           backgroundPosition: 'center'
-         }}>
-      <div className="flex-1 flex flex-col items-center justify-center px-4 py-12 text-center">
+    <div className="min-h-screen font-poppins flex flex-col relative">
+      {/* Video Background */}
+      <VideoContainer>
+        <BackgroundVideo
+          ref={videoRef}
+          autoPlay
+          loop
+          muted
+          playsInline
+        >
+          <source src={backgroundVideo} type="video/mp4" />
+          {/* Fallback to image if video fails to load */}
+          <div style={{
+            background: `url(${cookingBackground})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            width: '100%',
+            height: '100%'
+          }}></div>
+        </BackgroundVideo>
+        <VideoOverlay />
+      </VideoContainer>
 
-      <div className="p-4 rounded-full mb-6">
+      <div className="flex-1 flex flex-col items-center justify-center px-4 py-12 text-center relative z-10">
+        <div className="p-4 rounded-full mb-6">
           <ChefHat size={36} className="w-12 h-12 text-white animate-float" />
-      </div>
+        </div>
         
-       
         <h2 className="text-white text-2xl mb-2">Pan it out</h2>
         <h1 className="text-5xl md:text-7xl font-bold mb-6 text-red-400">
           ChefBot
@@ -66,7 +118,6 @@ const LandingPage = ({ onStartChat }) => {
         <p className="text-white text-lg md:text-xl mb-10 max-w-2xl">
           Ask anything about cooking, recipes, ingredients, or kitchen tips
         </p>
-        
         
         <form onSubmit={handleSubmit} className="w-full max-w-lg mb-10">
           <div className="relative">
@@ -91,7 +142,6 @@ const LandingPage = ({ onStartChat }) => {
           </div>
         </form>
         
-        
         <div className="mb-10">
           <h3 className="text-white uppercase tracking-wider mb-4 text-sm font-semibold">
             Popular Questions
@@ -108,7 +158,6 @@ const LandingPage = ({ onStartChat }) => {
             ))}
           </div>
         </div>
-        
         
         <div>
           <h3 className="text-white uppercase tracking-wider mb-4 text-sm font-semibold">
@@ -128,8 +177,8 @@ const LandingPage = ({ onStartChat }) => {
         </div>
       </div>
       
-      <footer className="text-center text-white py-4 text-sm">
-      <p>© 2025 ChefBot By Kinjal | Pan it Out</p>
+      <footer className="text-center text-white py-4 text-sm relative z-10">
+        <p>© 2025 ChefBot By Kinjal | Pan it Out</p>
       </footer>
     </div>
   );
