@@ -160,13 +160,13 @@ const BILINGUAL_VOICES = [
   { 
     id: 'hGb0Exk8cp4vQEnwolxa',  // Removed 'premade/' prefix
     name: 'Ayesha - Energetic Hindi Voice',
-    languages: ['Hindi'],
+    languages: ['Hindi', 'English', 'Multilingual'],
     isIndian: true
   },
   { 
     id: 'fEJqMD6Jp1JFP8T1BZpd',  // Removed 'premade/' prefix
     name: 'Bhavna',
-    languages: ['Hindi'],
+    languages: ['Hindi','English', 'Multilingual'],
     isIndian: true
   },
   { 
@@ -190,7 +190,7 @@ const ChatInterface = () => {
   const [messages, setMessages] = useState([]);
   
   // ElevenLabs integration
-  const ELEVENLABS_API_KEY = '';
+  const ELEVENLABS_API_KEY = 'sk_9b6480e22b2fa9d069468b51f5b67ed15641e39a0bb1524f';
   const [selectedVoice, setSelectedVoice] = useState('Ayesha'); // Updated default voice ID
   const [ttsEnabled, setTtsEnabled] = useState(true);
   const [showVoiceSettings, setShowVoiceSettings] = useState(false);
