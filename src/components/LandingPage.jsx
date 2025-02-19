@@ -109,7 +109,7 @@ const LandingPage = ({ onStartChat }) => {
       </div>
       
       <footer className="text-center text-white py-4 text-sm">
-        <p>© 2025 ChefBot | Pan it Out</p>
+        <p>© 2025 ChefBot By Kinjal | Pan it Out</p>
       </footer>
     </div>
   );
