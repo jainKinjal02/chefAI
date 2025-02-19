@@ -42,6 +42,13 @@ const LandingPage = ({ onStartChat }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const videoRef = useRef(null);
+
+  const handleVideoEnded = () => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = 0; // Reset to the start
+      videoRef.current.play(); // Play again
+    }
+  };
   
   // Debounced version of onStartChat to prevent double-clicks
   const handleStartChat = useCallback((query) => {
@@ -91,6 +98,7 @@ const LandingPage = ({ onStartChat }) => {
           loop
           muted
           playsInline
+          onEnded={handleVideoEnded}
         >
           <source src={backgroundVideo} type="video/mp4" />
           {/* Fallback to image if video fails to load */}
