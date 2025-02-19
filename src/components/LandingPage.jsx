@@ -32,23 +32,22 @@ const LandingPage = ({ onStartChat }) => {
            backgroundPosition: 'center'
          }}>
       <div className="flex-1 flex flex-col items-center justify-center px-4 py-12 text-center">
-        {/* Chef hat logo */}
-        <div className="bg-white p-4 rounded-full mb-6">
-          <ChefHat size={36} className="text-gray-800" />
+       
+        <div className="p-4 rounded-full mb-6">
+          <ChefHat size={36} className="w-12 h-12 text-white animate-float" />
         </div>
         
-        {/* Main title and tagline */}
+       
         <h2 className="text-white text-2xl mb-2">Pan it out</h2>
         <h1 className="text-5xl md:text-7xl font-bold mb-6 text-red-400">
           ChefBot
         </h1>
-        
-        {/* Subtitle */}
+       
         <p className="text-white text-lg md:text-xl mb-10 max-w-2xl">
           Ask anything about cooking, recipes, ingredients, or kitchen tips
         </p>
         
-        {/* Search box */}
+        
         <form onSubmit={handleSubmit} className="w-full max-w-lg mb-10">
           <div className="relative">
             <input 
@@ -72,7 +71,7 @@ const LandingPage = ({ onStartChat }) => {
           </div>
         </form>
         
-        {/* Popular questions */}
+        
         <div className="mb-10">
           <h3 className="text-white uppercase tracking-wider mb-4 text-sm font-semibold">
             Popular Questions
@@ -90,7 +89,7 @@ const LandingPage = ({ onStartChat }) => {
           </div>
         </div>
         
-        {/* Browse by category */}
+        
         <div>
           <h3 className="text-white uppercase tracking-wider mb-4 text-sm font-semibold">
             Browse by Category
