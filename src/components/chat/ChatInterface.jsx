@@ -183,12 +183,13 @@ const BILINGUAL_VOICES = [
   }
 ];
 
-const ChatInterface = () => {
+const ChatInterface = ({ initialQuery }) => {
   const [input, setInput] = useState('');
   const { askAI, loading } = useAI();
   const messagesEndRef = useRef(null);
   const [messages, setMessages] = useState([]);
-  
+  const [initialQueryHandled, setInitialQueryHandled] = useState(false);
+
   // ElevenLabs integration
   const ELEVENLABS_API_KEY = '';
   const [selectedVoice, setSelectedVoice] = useState('Ayesha'); // Updated default voice ID
@@ -197,6 +198,46 @@ const ChatInterface = () => {
   const [speaking, setSpeaking] = useState(false);
   const [audioElement, setAudioElement] = useState(null);
   const [availableVoices, setAvailableVoices] = useState([]);
+
+  useEffect(() => {
+    const handleInitialQuery = async () => {
+      // Only process if there's an initialQuery, it hasn't been handled yet,
+      // and there are no messages (to prevent duplicate processing)
+      if (initialQuery && !initialQueryHandled && messages.length === 0) {
+        setInitialQueryHandled(true);
+        
+        // Add user message
+        setMessages([{ text: initialQuery, isUser: true }]);
+        
+        try {
+          // Get AI response
+          const response = await askAI(initialQuery);
+          
+          // Add AI response
+          const responseText = typeof response === 'object' ? response.display : response;
+          setMessages(prev => [...prev, { 
+            text: responseText, 
+            isUser: false,
+            id: Date.now()
+          }]);
+          
+          // Handle speech synthesis if enabled
+          if (ttsEnabled) {
+            await speakWithElevenLabs(responseText);
+          }
+        } catch (error) {
+          console.error('Error processing initial query:', error);
+          setMessages(prev => [...prev, { 
+            text: "Sorry, I had trouble processing that request. Please try again.", 
+            isUser: false,
+            id: Date.now()
+          }]);
+        }
+      }
+    };
+    
+    handleInitialQuery();
+  }, [initialQuery, initialQueryHandled, askAI, ttsEnabled, messages.length]);
   
   // Fetch available voices from ElevenLabs
   useEffect(() => {

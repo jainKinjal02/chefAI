@@ -1,15 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState , useCallback} from 'react';
 import { ChefHat, ArrowRight } from 'lucide-react';
 import cookingBackground from '../assets/bg-photo.jpeg';
 
 const LandingPage = ({ onStartChat }) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Debounced version of onStartChat to prevent double-clicks
+  const handleStartChat = useCallback((query) => {
+    if (!isSubmitting && query.trim()) {
+      setIsSubmitting(true);
+      onStartChat(query);
+      
+      // Reset submission state after a delay
+      setTimeout(() => {
+        setIsSubmitting(false);
+      }, 500);
+    }
+  }, [onStartChat, isSubmitting]);
   
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      onStartChat(searchQuery);
-    }
+    handleStartChat(searchQuery);
+  };
+
+  const handleQuestionClick = (question) => {
+    handleStartChat(question);
+  };
+
+  const handleCategoryClick = (category) => {
+    handleStartChat(`Tell me about ${category.toLowerCase()}`);
   };
 
   const popularQuestions = [
@@ -27,22 +47,22 @@ const LandingPage = ({ onStartChat }) => {
   return (
     <div className="min-h-screen font-poppins flex flex-col"
          style={{
-            backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url(${cookingBackground})`,
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url(${cookingBackground})`,
            backgroundSize: 'cover',
            backgroundPosition: 'center'
          }}>
       <div className="flex-1 flex flex-col items-center justify-center px-4 py-12 text-center">
-       
-        <div className="p-4 rounded-full mb-6">
+
+      <div className="p-4 rounded-full mb-6">
           <ChefHat size={36} className="w-12 h-12 text-white animate-float" />
-        </div>
+      </div>
         
        
         <h2 className="text-white text-2xl mb-2">Pan it out</h2>
         <h1 className="text-5xl md:text-7xl font-bold mb-6 text-red-400">
           ChefBot
-        </h1>
-       
+        </h1> 
+        
         <p className="text-white text-lg md:text-xl mb-10 max-w-2xl">
           Ask anything about cooking, recipes, ingredients, or kitchen tips
         </p>
@@ -80,7 +100,7 @@ const LandingPage = ({ onStartChat }) => {
             {popularQuestions.map((question, index) => (
               <button
                 key={index}
-                onClick={() => onStartChat(question)}
+                onClick={() => handleQuestionClick(question)}
                 className="bg-black bg-opacity-50 hover:bg-opacity-70 text-white px-4 py-2 rounded-full text-sm transition-all duration-200 border border-gray-600"
               >
                 {question}
@@ -98,7 +118,7 @@ const LandingPage = ({ onStartChat }) => {
             {categories.map((category, index) => (
               <button
                 key={index}
-                onClick={() => onStartChat(`Tell me about ${category.toLowerCase()}`)}
+                onClick={() => handleCategoryClick(category)}
                 className="bg-red-400 bg-opacity-80 hover:bg-opacity-100 text-white px-4 py-2 rounded-full text-sm transition-all duration-200"
               >
                 {category}
@@ -109,7 +129,7 @@ const LandingPage = ({ onStartChat }) => {
       </div>
       
       <footer className="text-center text-white py-4 text-sm">
-        <p>© 2025 ChefBot By Kinjal | Pan it Out</p>
+      <p>© 2025 ChefBot By Kinjal | Pan it Out</p>
       </footer>
     </div>
   );

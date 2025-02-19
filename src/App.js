@@ -1,5 +1,5 @@
-// App.jsx
-import React, { useState } from 'react';
+// Updated App.jsx
+import React, { useState, useEffect } from 'react';
 import LandingPage from './components/LandingPage';
 import ChatInterface from './components/chat/ChatInterface';
 import { AIProvider } from './context/AIContext';
@@ -9,12 +9,16 @@ const App = () => {
   const [initialQuery, setInitialQuery] = useState('');
 
   const handleStartChat = (query) => {
-    setInitialQuery(query);
-    setView('chat');
+    if (query && query.trim()) {
+      setInitialQuery(query);
+      setView('chat');
+    }
   };
 
   const handleBackToHome = () => {
     setView('landing');
+    // Reset initial query when going back to landing
+    setInitialQuery('');
   };
 
   return (
@@ -28,6 +32,7 @@ const App = () => {
               <button 
                 onClick={handleBackToHome}
                 className="mr-3 hover:bg-red-500 p-1 rounded transition-colors"
+                aria-label="Back to home"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
