@@ -391,17 +391,16 @@ const ChatInterface = ({ initialQuery }) => {
   };
   
   const handleSubmit = async (e) => {
-    e?.preventDefault();
-    const query = input || e;
-    if (!query.trim() || loading) return;
-    
+    e.preventDefault();
+    if (!input.trim() || loading) return; // Prevent submission if loading
+  
     // Add user message
-    setMessages(prev => [...prev, { text: query, isUser: true }]);
+    setMessages(prev => [...prev, { text: input, isUser: true }]);
     setInput('');
-    
+  
     try {
       // Get AI response
-      const response = await askAI(query);
+      const response = await askAI(input);
       
       // Add AI response
       const responseText = typeof response === 'object' ? response.display : response;
@@ -534,7 +533,7 @@ const ChatInterface = ({ initialQuery }) => {
           placeholder="Ask about recipes, cooking techniques, or kitchen tips..."
           disabled={loading}
         />
-        <SendButton type="submit" disabled={loading}>
+        <SendButton type="submit" disabled={loading || !input.trim()}>
           {loading ? 'Thinking...' : 'Send'}
         </SendButton>
       </InputArea>
