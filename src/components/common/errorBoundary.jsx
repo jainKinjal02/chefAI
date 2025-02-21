@@ -26,14 +26,14 @@ const ErrorMessage = styled.p`
 
 const RetryButton = styled.button`
   padding: 0.5rem 1rem;
-  background: #4285f4;
+  background: #ef4444;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   
   &:hover {
-    background: #3367d6;
+    background: #dc2626;
   }
 `;
 

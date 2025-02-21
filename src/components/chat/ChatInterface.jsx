@@ -44,18 +44,18 @@ const TextInput = styled.input`
 const SendButton = styled.button`
   margin-left: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background: #4285f4;
+  background: #ef4444;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   
   &:hover {
-    background: #3367d6;
+    background: #dc2626;
   }
 
   &:disabled {
-    background: #a0c0f0;
+    background: #fca5a5;
     cursor: not-allowed;
   }
 `;
@@ -66,7 +66,7 @@ const Message = styled.div`
   
   ${props => props.isUser ? `
     align-self: flex-end;
-    background: #4285f4;
+    background: #ef4444;
     color: white;
     margin-left: auto;
   ` : `
@@ -87,7 +87,7 @@ const MessageContainer = styled.div`
 `;
 
 const PlayButton = styled.button`
-  background: #4285f4;
+  background: #ef4444;
   color: white;
   border: none;
   border-radius: 50%;
@@ -102,7 +102,7 @@ const PlayButton = styled.button`
   box-shadow: 0 1px 3px rgba(0,0,0,0.2);
   
   &:hover {
-    background: #3367d6;
+    background: #dc2626;
   }
   
   &:disabled {
@@ -128,22 +128,22 @@ const VoiceSelector = styled.select`
 
 const VoiceToggle = styled.button`
   padding: 0.5rem;
-  background: ${props => props.active ? '#4285f4' : '#e0e0e0'};
-  color: ${props => props.active ? 'white' : '#666'};
+  background: ${props => props.active ? '#ef4444' : '#e5e7eb'};
+  color: ${props => props.active ? 'white' : '#374151'};
   border: none;
   border-radius: 4px;
   cursor: pointer;
   font-size: 0.9rem;
   
   &:hover {
-    opacity: 0.9;
+    background: ${props => props.active ? '#dc2626' : '#d1d5db'}; // Changed hover states
   }
 `;
 
 const SettingsToggle = styled.button`
   background: none;
   border: none;
-  color: #666;
+  color: #ef4444;
   cursor: pointer;
   padding: 0.5rem;
   font-size: 0.9rem;
@@ -151,7 +151,7 @@ const SettingsToggle = styled.button`
   margin-left: auto;
   
   &:hover {
-    color: #4285f4;
+    color: #fef2f2;
   }
 `;
 

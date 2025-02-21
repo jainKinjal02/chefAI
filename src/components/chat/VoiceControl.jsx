@@ -18,7 +18,7 @@ const MicButton = styled.button`
   height: 48px;
   border-radius: 50%;
   border: none;
-  background: ${props => props.isListening ? '#ff4444' : '#4285f4'};
+  background: ${props => props.isListening ? '#dc2626' : '#ef4444'};
   color: white;
   cursor: pointer;
   transition: all 0.2s ease;

@@ -51,8 +51,8 @@ const ActionButton = styled.button`
   padding: 0.5rem 1rem;
   border: none;
   border-radius: 6px;
-  background: ${props => props.primary ? '#4285f4' : '#e9ecef'};
-  color: ${props => props.primary ? 'white' : '#666'};
+  background: ${props => props.primary ? '#ef4444' : '#e9ecef'};
+  color: ${props => props.primary ? 'white' : '#ef4444'};
   cursor: pointer;
   transition: all 0.2s ease;
 
