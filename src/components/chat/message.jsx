@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import styled from 'styled-components';
 
 const MessageContainer = styled.div`
@@ -10,6 +10,15 @@ const MessageContainer = styled.div`
   padding: 0.75rem 1rem;
   border-radius: 18px;
   box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  opacity: ${props => props.isLoading ? 0.7 : 1};
+  
+  @keyframes pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 0.8; }
+    100% { opacity: 0.6; }
+  }
+  
+  animation: ${props => props.isLoading ? 'pulse 1.5s infinite' : 'none'};
 `;
 
 const Timestamp = styled.div`
@@ -18,8 +27,9 @@ const Timestamp = styled.div`
   margin-top: 0.25rem;
 `;
 
-const Message = ({ text, isUser, timestamp }) => (
-  <MessageContainer isUser={isUser}>
+// Memoize the Message component to prevent unnecessary re-renders
+const Message = memo(({ text, isUser, timestamp, isLoading }) => (
+  <MessageContainer isUser={isUser} isLoading={isLoading}>
     {text}
     {timestamp && (
       <Timestamp isUser={isUser}>
@@ -27,6 +37,8 @@ const Message = ({ text, isUser, timestamp }) => (
       </Timestamp>
     )}
   </MessageContainer>
-);
+));
+
+Message.displayName = 'Message';
 
 export default Message;

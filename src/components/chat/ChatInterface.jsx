@@ -201,43 +201,63 @@ const ChatInterface = ({ initialQuery }) => {
 
   useEffect(() => {
     const handleInitialQuery = async () => {
-      // Only process if there's an initialQuery, it hasn't been handled yet,
-      // and there are no messages (to prevent duplicate processing)
       if (initialQuery && !initialQueryHandled && messages.length === 0) {
         setInitialQueryHandled(true);
+        let aiResponseText = '';
         
-        // Add user message
-        setMessages([{ text: initialQuery, isUser: true }]);
+        // Immediately show the user's message
+        const userMessage = { 
+          text: initialQuery, 
+          isUser: true,
+          id: Date.now() 
+        };
+        setMessages([userMessage]);
         
         try {
-          // Get AI response
-          const response = await askAI(initialQuery);
-          
-          // Add AI response
-          const responseText = typeof response === 'object' ? response.display : response;
-          setMessages(prev => [...prev, { 
-            text: responseText, 
+          // Show loading message
+          setMessages(prev => [...prev, {
+            text: "Thinking...",
             isUser: false,
-            id: Date.now()
+            id: Date.now() + 1,
+            isLoading: true
           }]);
+
+          const response = await askAI(initialQuery);
+          aiResponseText = typeof response === 'object' ? response.display : response;
           
-          // Handle speech synthesis if enabled
-          if (ttsEnabled) {
-            await speakWithElevenLabs(responseText);
-          }
+          // Replace loading message with actual response
+          setMessages(prev => [
+            prev[0],
+            {
+              text: aiResponseText,
+              isUser: false,
+              id: Date.now() + 2
+            }
+          ]);
+          
         } catch (error) {
           console.error('Error processing initial query:', error);
-          setMessages(prev => [...prev, { 
-            text: "Sorry, I had trouble processing that request. Please try again.", 
-            isUser: false,
-            id: Date.now()
-          }]);
+          aiResponseText = "Sorry, I had trouble processing that request. Please try again.";
+          
+          // Replace loading message with error message
+          setMessages(prev => [
+            prev[0],
+            {
+              text: aiResponseText,
+              isUser: false,
+              id: Date.now() + 2
+            }
+          ]);
+        }
+        
+        if (ttsEnabled && aiResponseText) {
+          await speakWithElevenLabs(aiResponseText);
         }
       }
     };
     
     handleInitialQuery();
-  }, [initialQuery, initialQueryHandled, askAI, ttsEnabled, messages.length]);
+  }, [initialQuery, initialQueryHandled, askAI, ttsEnabled]); 
   
   // Fetch available voices from ElevenLabs
   useEffect(() => {
@@ -392,37 +412,51 @@ const ChatInterface = ({ initialQuery }) => {
   
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!input.trim() || loading) return; // Prevent submission if loading
+    if (!input.trim() || loading) return;
   
-    // Add user message
-    setMessages(prev => [...prev, { text: input, isUser: true }]);
+    const userMessage = { 
+      text: input, 
+      isUser: true,
+      id: Date.now()
+    };
+    
+    // Immediately show user message
+    setMessages(prev => [...prev, userMessage]);
     setInput('');
+
+    // Add loading message
+    setMessages(prev => [...prev, {
+      text: "Thinking...",
+      isUser: false,
+      id: Date.now() + 1,
+      isLoading: true
+    }]);
   
     try {
-      // Get AI response
       const response = await askAI(input);
-      
-      // Add AI response
       const responseText = typeof response === 'object' ? response.display : response;
-      setMessages(prev => [...prev, { 
+      
+      // Replace loading message with actual response
+      setMessages(prev => [...prev.slice(0, -1), { 
         text: responseText, 
         isUser: false,
-        id: Date.now() // Add unique id for each message
+        id: Date.now() + 2
       }]);
       
-      // Speak with ElevenLabs if enabled
       if (ttsEnabled) {
         await speakWithElevenLabs(responseText);
       }
     } catch (error) {
       console.error('Error getting response:', error);
-      setMessages(prev => [...prev, { 
+      // Replace loading message with error message
+      setMessages(prev => [...prev.slice(0, -1), { 
         text: "Sorry, I had trouble processing that request. Please try again.", 
         isUser: false,
-        id: Date.now()
+        id: Date.now() + 2
       }]);
     }
   };
+
   
   // Voice settings toggle
   const toggleVoiceSettings = () => {
