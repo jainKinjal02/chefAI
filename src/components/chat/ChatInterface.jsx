@@ -142,8 +142,8 @@ const VoiceToggle = styled.button`
 
 const SettingsToggle = styled.button`
   background: none;
-  border: none;
-  color: #ef4444;
+  border: none';
+  color: #fca5a5;
   cursor: pointer;
   padding: 0.5rem;
   font-size: 0.9rem;
@@ -151,7 +151,7 @@ const SettingsToggle = styled.button`
   margin-left: auto;
   
   &:hover {
-    color: #fef2f2;
+    color: #ef4444;
   }
 `;
 
