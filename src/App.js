@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import LandingPage from './components/LandingPage';
 import ChatInterface from './components/chat/ChatInterface';
 import { AIProvider } from './context/AIContext';
+import ChatContainerWithVideo from './components/chat/chatContainerVideo';
+import backgroundImage from './assets/bg-photo.jpeg';
 
 const App = () => {
   const [view, setView] = useState('landing');
@@ -47,9 +49,23 @@ const App = () => {
                 <h1 className="font-semibold">ChefBot</h1>
               </div>
             </header>
-            <div className="flex-1 overflow-hidden">
+            {/* <div className="flex-1 overflow-hidden mt-20">
               <ChatInterface initialQuery={initialQuery} />
-            </div>
+            </div> */}
+            {/* <div 
+                className="flex-1 overflow-hidden mt-10 relative"
+                style={{
+                  backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url(${backgroundImage})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat'
+                }}
+            >
+              <div className="relative z-10 h-full">
+                <ChatInterface initialQuery={initialQuery} />
+              </div>
+            </div> */}
+            <ChatContainerWithVideo initialQuery={initialQuery} ></ChatContainerWithVideo>
           </div>
         )}
       </div>
