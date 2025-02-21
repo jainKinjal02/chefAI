@@ -488,7 +488,7 @@ const ChatInterface = ({ initialQuery }) => {
             <Message isUser={msg.isUser}>
               {msg.text}
             </Message>
-            {!msg.isUser && ttsEnabled && (
+            {!msg.isLoading && !msg.isUser && ttsEnabled && (
               <PlayButton 
                 onClick={() => handlePlay(msg.text)}
                 disabled={speaking}
