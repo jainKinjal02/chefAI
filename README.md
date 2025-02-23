@@ -2,7 +2,7 @@
 
 ChefBot is an AI-powered cooking assistant that provides instant recipes, cooking techniques, and kitchen tips in both English and Hindi with natural voice responses.
 
-![ChefBot Landing Page](path-to-your-screenshot.png)
+![ChefBot Landing Page]
 
 ## Features ✨
 
