@@ -140,7 +140,7 @@ const PlayButton = styled.button`
 
 const MessageWrapper = styled.div`
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 1rem;
   justify-content: ${props => props.isUser ? 'flex-end' : 'flex-start'};
   width: 100%;
