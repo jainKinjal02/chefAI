@@ -49,9 +49,9 @@ const App = () => {
                 <h1 className="font-semibold">ChefBot</h1>
               </div>
             </header>
-            {/* <div className="flex-1 overflow-hidden mt-20">
+            <div className="flex-1 overflow-auto">
               <ChatInterface initialQuery={initialQuery} />
-            </div> */}
+            </div>
             {/* <div 
                 className="flex-1 overflow-hidden mt-10 relative"
                 style={{
@@ -65,7 +65,7 @@ const App = () => {
                 <ChatInterface initialQuery={initialQuery} />
               </div>
             </div> */}
-            <ChatContainerWithVideo initialQuery={initialQuery} ></ChatContainerWithVideo>
+            {/* <ChatContainerWithVideo initialQuery={initialQuery} ></ChatContainerWithVideo> */}
           </div>
         )}
       </div>
