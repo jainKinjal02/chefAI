@@ -2,32 +2,15 @@ import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
 import { useAI } from '../../context/AIContext';
 
-// Using styled messages directly instead of importing the Message component
-const MessageBubble = styled.div`
-  max-width: 80%;
-  background: ${props => props.isUser ? 'rgba(239, 68, 68, 0.95)' : 'rgba(255, 255, 255, 0.95)'};
-  color: ${props => props.isUser ? 'white' : '#333'};
-  padding: 0.75rem 1rem;
-  border-radius: 18px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  opacity: ${props => props.isLoading ? 0.7 : 1};
-  
-  @keyframes pulse {
-    0% { opacity: 0.6; }
-    50% { opacity: 0.8; }
-    100% { opacity: 0.6; }
-  }
-  
-  animation: ${props => props.isLoading ? 'pulse 1.5s infinite' : 'none'};
-`;
 
+// Styled components with improved visual hierarchy and readability
 const Timestamp = styled.div`
   font-size: 0.75rem;
   color: ${props => props.isUser ? 'rgba(255,255,255,0.7)' : '#666'};
-  margin-top: 0.25rem;
+  margin-top: 0.25rem; /* Reduced from 0.5rem */
+  text-align: right;
 `;
 
-// Styled components
 const ChatContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -41,7 +24,6 @@ const ChatContainer = styled.div`
   background-attachment: fixed;
   position: relative;
   
-  /* Add overlay to improve readability */
   &::before {
     content: '';
     position: absolute;
@@ -49,7 +31,7 @@ const ChatContainer = styled.div`
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(255, 255, 255, 0.5);
+    background-color: rgba(255, 255, 255, 0.65); /* Slightly increased opacity for better readability */
     z-index: 1;
   }
 `;
@@ -64,23 +46,123 @@ const MessagesContainer = styled.div`
   min-height: 300px;
   position: relative;
   z-index: 2;
+  gap: 1.25rem; /* Added gap for better spacing between messages */
 `;
+
+const MessageWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  justify-content: ${props => props.isUser ? 'flex-end' : 'flex-start'};
+  width: 100%;
+  max-width: 85%; /* Slightly larger to accommodate recipe content */
+  align-self: ${props => props.isUser ? 'flex-end' : 'flex-start'};
+`;
+
+// Improved message bubble with better formatting for recipes
+const MessageBubble = styled.div`
+  max-width: 95%;
+  background: ${props => props.isUser ? 'rgba(239, 68, 68, 0.95)' : 'rgba(255, 255, 255, 0.95)'};
+  color: ${props => props.isUser ? 'white' : '#333'};
+  padding: 1rem;
+  border-radius: 18px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  opacity: ${props => props.isLoading ? 0.7 : 1};
+  
+  /* Added better typography */
+  font-size: 15px;
+  line-height: 1.5;
+
+    /* Reduce space between message content and timestamp */
+  & > *:last-child:not(${Timestamp}) {
+    margin-bottom: 0.25rem; /* Reduced from default spacing */
+  }
+  
+  /* Format recipe content when detected */
+  & .recipe-title {
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    color: ${props => props.isUser ? 'white' : '#111'};
+  }
+  
+  & .recipe-meta {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.85rem;
+    color: ${props => props.isUser ? 'rgba(255,255,255,0.8)' : '#555'};
+  }
+  
+  & .recipe-section {
+    margin-top: 0.75rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+  }
+  
+  & .recipe-ingredient {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.25rem 0;
+    border-bottom: 1px dotted ${props => props.isUser ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'};
+  }
+  
+  & .recipe-instruction {
+    display: flex;
+    margin-bottom: 0.5rem;
+    gap: 0.5rem;
+    
+    & .step-number {
+      background: ${props => props.isUser ? 'rgba(255,255,255,0.2)' : 'rgba(239, 68, 68, 0.1)'};
+      color: ${props => props.isUser ? 'white' : '#ef4444'};
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+  }
+  
+  & .tips-section {
+    background: ${props => props.isUser ? 'rgba(255,255,255,0.15)' : 'rgba(239, 68, 68, 0.08)'};
+    padding: 0.75rem;
+    border-radius: 8px;
+    margin-top: 0.75rem;
+    font-size: 0.9rem;
+  }
+  
+  @keyframes pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 0.8; }
+    100% { opacity: 0.6; }
+  }
+  
+  animation: ${props => props.isLoading ? 'pulse 1.5s infinite' : 'none'};
+`;
+
 
 const InputArea = styled.div`
   display: flex;
   padding: 1rem;
   position: relative;
   z-index: 2;
+  background: rgba(255, 255, 255, 0.8);
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
 `;
 
 const TextInput = styled.input`
   flex: 1;
-  padding: 0.75rem 1rem;
+  padding: 0.85rem 1rem;
   border: 1px solid rgba(224, 224, 224, 0.8);
-  border-radius: 8px;
+  border-radius: 24px; /* More rounded for a friendlier look */
   font-size: 1rem;
   outline: none;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   
   &:focus {
     border-color: #f8a4a4;
@@ -90,21 +172,28 @@ const TextInput = styled.input`
 
 const SendButton = styled.button`
   margin-left: 0.5rem;
-  width: 50px;
-  height: 49px;
+  width: 46px;
+  height: 46px;
   background: #ef4444;
   color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 50%; /* Circular button for better aesthetics */
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+  transition: transform 0.2s;
+  
+  &:hover {
+    transform: scale(1.05);
+  }
   
   &:disabled {
     background: #fca5a5;
     cursor: not-allowed;
     opacity: 0.6;
+    transform: none;
   }
   
   svg {
@@ -118,8 +207,8 @@ const PlayButton = styled.button`
   color: white;
   border: none;
   border-radius: 50%;
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   font-size: 10px;
   display: flex;
   align-items: center;
@@ -130,6 +219,7 @@ const PlayButton = styled.button`
   
   &:hover {
     background: #dc2626;
+    transform: scale(1.05);
   }
   
   &:disabled {
@@ -138,12 +228,28 @@ const PlayButton = styled.button`
   }
 `;
 
-const MessageWrapper = styled.div`
+// Quick reply suggestions
+const QuickReplies = styled.div`
   display: flex;
-  align-items: center;
-  margin-bottom: 1rem;
-  justify-content: ${props => props.isUser ? 'flex-end' : 'flex-start'};
-  width: 100%;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+`;
+
+const QuickReplyButton = styled.button`
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 16px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: rgba(239, 68, 68, 0.2);
+  }
 `;
 
 // Loading indicator component
@@ -152,6 +258,7 @@ const LoadingIndicator = styled.div`
   align-items: center;
   justify-content: center;
   gap: 4px;
+  padding: 0.5rem 0;
   
   .dot {
     width: 8px;
@@ -216,12 +323,81 @@ const BILINGUAL_VOICES = [
   }
 ];
 
+// Function to parse and format recipe data from JSON
+const formatRecipeContent = (text) => {
+  // Try to detect if the message contains a recipe JSON
+  if (text.includes('"title":') && text.includes('"ingredients":') && text.includes('"steps":')) {
+    try {
+      // Extract the JSON part - this regex looks for a JSON-like structure
+      const jsonMatch = text.match(/\{.*"title".*"ingredients".*"steps".*\}/s);
+      
+      if (jsonMatch) {
+        const recipeData = JSON.parse(jsonMatch[0]);
+        
+        // Create formatted HTML structure
+        return (
+          <div className="recipe-formatted">
+            <div className="recipe-title">{recipeData.title}</div>
+            
+            <div className="recipe-meta">
+              {recipeData.prepTime && <span>Prep: {recipeData.prepTime}</span>}
+              {recipeData.cookTime && <span>Cook: {recipeData.cookTime}</span>}
+              {recipeData.servings && <span>Servings: {recipeData.servings}</span>}
+            </div>
+            
+            <div className="recipe-section">Ingredients</div>
+            <div className="ingredients-list">
+              {recipeData.ingredients.map((ingredient, idx) => (
+                <div key={idx} className="recipe-ingredient">
+                  <span>{ingredient.name}</span>
+                  <span>{ingredient.amount} {ingredient.unit}</span>
+                </div>
+              ))}
+            </div>
+            
+            <div className="recipe-section">Instructions</div>
+            <div className="instructions-list">
+              {recipeData.steps.map((step, idx) => (
+                <div key={idx} className="recipe-instruction">
+                  <div className="step-number">{idx + 1}</div>
+                  <div>{step.instruction}</div>
+                </div>
+              ))}
+            </div>
+            
+            {recipeData.tips && (
+              <div className="tips-section">
+                <strong>Chef's Tips:</strong> {recipeData.tips}
+              </div>
+            )}
+          </div>
+        );
+      }
+    } catch (e) {
+      console.log("Not a valid recipe JSON, displaying as regular text");
+    }
+  }
+  
+  // If not a recipe or parsing failed, return the original text
+  return text;
+};
+
+// Suggested quick replies for cooking questions
+const QUICK_REPLY_SUGGESTIONS = [
+  "Quick dinner ideas",
+  "How to make pasta sauce",
+  "Vegetarian recipes",
+  "Cooking tips for beginners",
+  "Best spices for chicken"
+];
+
 const ChatInterface = ({ initialQuery }) => {
   const [input, setInput] = useState('');
   const { askAI, loading } = useAI();
   const messagesEndRef = useRef(null);
   const [messages, setMessages] = useState([]);
   const [initialQueryHandled, setInitialQueryHandled] = useState(false);
+  const [quickReplies, setQuickReplies] = useState(QUICK_REPLY_SUGGESTIONS);
   
   // ElevenLabs TTS state
   const [selectedVoice, setSelectedVoice] = useState('hGb0Exk8cp4vQEnwolxa'); // Default to Ayesha
@@ -271,8 +447,15 @@ const ChatInterface = ({ initialQuery }) => {
         stopSpeaking();
       }
       
+      // Extract plain text if it's HTML content
+      let plainText = text;
+      if (typeof text !== 'string') {
+        // If it's a React element (formatted recipe), convert to plain text representation
+        plainText = "Here's your recipe. Please check the chat for formatted details.";
+      }
+      
       // Detect language
-      const detectedLanguage = detectLanguage(text);
+      const detectedLanguage = detectLanguage(plainText);
       
       // Get optimal voice settings for the language
       const voiceSettings = {
@@ -304,7 +487,7 @@ const ChatInterface = ({ initialQuery }) => {
             'xi-api-key': ELEVENLABS_API_KEY
           },
           body: JSON.stringify({
-            text,
+            text: plainText,
             model_id: 'eleven_multilingual_v2',
             voice_settings: voiceSettings
           })
@@ -358,6 +541,39 @@ const ChatInterface = ({ initialQuery }) => {
     speakWithElevenLabs(text);
   };
 
+  // Generate context-aware quick replies based on conversation
+  const generateQuickReplies = (lastBotMessage) => {
+    // Detect if the message contains food-related terms
+    const foodTerms = ['recipe', 'cook', 'food', 'ingredient', 'dish', 'meal', 'cuisine'];
+    
+    let newReplies = [...QUICK_REPLY_SUGGESTIONS];
+    
+    if (typeof lastBotMessage === 'string') {
+      // Check if the message mentions specific foods
+      const foodMatches = lastBotMessage.match(/\b(chicken|pasta|rice|vegetable|beef|fish|salad|soup|bread|dessert)\b/gi);
+      
+      if (foodMatches && foodMatches.length > 0) {
+        // Create contextual quick replies based on mentioned foods
+        const uniqueFoods = [...new Set(foodMatches.map(match => match.toLowerCase()))];
+        
+        newReplies = uniqueFoods.map(food => {
+          const suggestions = [
+            `How to cook ${food}?`,
+            `Best ${food} recipes`,
+            `Healthy ${food} ideas`,
+            `Quick ${food} meal`
+          ];
+          return suggestions[Math.floor(Math.random() * suggestions.length)];
+        }).slice(0, 3);
+        
+        // Add a couple of general suggestions
+        newReplies.push(...QUICK_REPLY_SUGGESTIONS.slice(0, 2));
+      }
+    }
+    
+    return newReplies;
+  };
+
   useEffect(() => {
     const handleInitialQuery = async () => {
       if (initialQuery && !initialQueryHandled && messages.length === 0) {
@@ -386,16 +602,22 @@ const ChatInterface = ({ initialQuery }) => {
           const response = await askAI(initialQuery);
           aiResponseText = typeof response === 'object' ? response.display : response;
           
+          // Format response if it's a recipe
+          const formattedResponse = formatRecipeContent(aiResponseText);
+          
           // Replace loading message with actual response
           setMessages(prev => [
             prev[0],
             {
-              text: aiResponseText,
+              text: formattedResponse,
               isUser: false,
               id: Date.now() + 2,
               timestamp: new Date().toISOString()
             }
           ]);
+          
+          // Update quick replies based on response
+          setQuickReplies(generateQuickReplies(aiResponseText));
           
           if (ttsEnabled) {
             await speakWithElevenLabs(aiResponseText);
@@ -423,7 +645,7 @@ const ChatInterface = ({ initialQuery }) => {
   }, [initialQuery, initialQueryHandled, askAI, ttsEnabled]); 
   
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e && e.preventDefault();
     if (!input.trim() || loading) return;
   
     const userMessage = { 
@@ -450,13 +672,19 @@ const ChatInterface = ({ initialQuery }) => {
       const response = await askAI(input);
       const responseText = typeof response === 'object' ? response.display : response;
       
+      // Format response if it's a recipe
+      const formattedResponse = formatRecipeContent(responseText);
+      
       // Replace loading message with actual response
       setMessages(prev => [...prev.slice(0, -1), { 
-        text: responseText, 
+        text: formattedResponse, 
         isUser: false,
         id: Date.now() + 2,
         timestamp: new Date().toISOString()
       }]);
+      
+      // Update quick replies based on response
+      setQuickReplies(generateQuickReplies(responseText));
       
       if (ttsEnabled) {
         await speakWithElevenLabs(responseText);
@@ -471,6 +699,12 @@ const ChatInterface = ({ initialQuery }) => {
         timestamp: new Date().toISOString()
       }]);
     }
+  };
+  
+  // Handle quick reply click
+  const handleQuickReplyClick = (reply) => {
+    setInput(reply);
+    handleSubmit();
   };
   
   // Cleanup audio on unmount
@@ -505,7 +739,7 @@ const ChatInterface = ({ initialQuery }) => {
                   {msg.text}
                   {msg.timestamp && (
                     <Timestamp isUser={msg.isUser}>
-                      {new Date(msg.timestamp).toLocaleTimeString()}
+                      {new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                     </Timestamp>
                   )}
                 </>
@@ -524,6 +758,7 @@ const ChatInterface = ({ initialQuery }) => {
         ))}
         <div ref={messagesEndRef} />
       </MessagesContainer>
+      
       
       <InputArea as="form" onSubmit={handleSubmit}>
         <TextInput
