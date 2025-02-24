@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
 import { useAI } from '../../context/AIContext';
+
 // Using styled messages directly instead of importing the Message component
 const MessageBubble = styled.div`
   max-width: 80%;
@@ -68,8 +69,8 @@ const MessagesContainer = styled.div`
 const InputArea = styled.div`
   display: flex;
   padding: 1rem;
-  background: rgba(255, 255, 255, 0.5);
-  border-top: 1px solid rgba(224, 224, 224, 0.5);
+  
+  
   position: relative;
   z-index: 2;
 `;
@@ -91,20 +92,29 @@ const TextInput = styled.input`
 
 const SendButton = styled.button`
   margin-left: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  background: #f8a4a4; // Softer red matching the screenshot
+  width: 50px;
+  height: 49px;
+  background: #f8a4a4;
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 5px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ef4444;
   
-  &:hover {
-    background: #ef4444;
-  }
+
 
   &:disabled {
     background: #fca5a5;
     cursor: not-allowed;
+    opacity: 0.6;
+  }
+  
+  svg {
+    width: 20px;
+    height: 20px;
   }
 `;
 
@@ -116,30 +126,46 @@ const MessageWrapper = styled.div`
   width: 100%;
 `;
 
-const PlayButton = styled.button`
-  background: #ef4444; // Red theme to match the interface
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  font-size: 10px;
+// Loading indicator component
+const LoadingIndicator = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-left: 8px;
-  cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  gap: 4px;
   
-  &:hover {
-    background: #dc2626;
+  .dot {
+    width: 8px;
+    height: 8px;
+    background-color: #888;
+    border-radius: 50%;
+    animation: bounce 1.4s infinite ease-in-out both;
   }
   
-  &:disabled {
-    background: #a5c2fa;
-    cursor: not-allowed;
+  .dot:nth-child(1) {
+    animation-delay: -0.32s;
+  }
+  
+  .dot:nth-child(2) {
+    animation-delay: -0.16s;
+  }
+  
+  @keyframes bounce {
+    0%, 80%, 100% {
+      transform: scale(0);
+    }
+    40% {
+      transform: scale(1);
+    }
   }
 `;
+
+// Icon component for the send button
+const SendIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="22" y1="2" x2="11" y2="13"></line>
+    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+  </svg>
+);
 
 const ChatInterface = ({ initialQuery }) => {
   const [input, setInput] = useState('');
@@ -164,9 +190,9 @@ const ChatInterface = ({ initialQuery }) => {
         setMessages([userMessage]);
         
         try {
-          // Show loading message
+          // Show loading message with dots animation
           setMessages(prev => [...prev, {
-            text: "Thinking...",
+            text: "",
             isUser: false,
             id: Date.now() + 1,
             isLoading: true,
@@ -223,9 +249,9 @@ const ChatInterface = ({ initialQuery }) => {
     setMessages(prev => [...prev, userMessage]);
     setInput('');
 
-    // Add loading message
+    // Add loading message with dots animation
     setMessages(prev => [...prev, {
-      text: "Thinking...",
+      text: "",
       isUser: false,
       id: Date.now() + 1,
       isLoading: true,
@@ -269,11 +295,21 @@ const ChatInterface = ({ initialQuery }) => {
               isUser={msg.isUser}
               isLoading={msg.isLoading}
             >
-              {msg.text}
-              {msg.timestamp && (
-                <Timestamp isUser={msg.isUser}>
-                  {new Date(msg.timestamp).toLocaleTimeString()}
-                </Timestamp>
+              {msg.isLoading ? (
+                <LoadingIndicator>
+                  <div className="dot"></div>
+                  <div className="dot"></div>
+                  <div className="dot"></div>
+                </LoadingIndicator>
+              ) : (
+                <>
+                  {msg.text}
+                  {msg.timestamp && (
+                    <Timestamp isUser={msg.isUser}>
+                      {new Date(msg.timestamp).toLocaleTimeString()}
+                    </Timestamp>
+                  )}
+                </>
               )}
             </MessageBubble>
           </MessageWrapper>
@@ -288,8 +324,12 @@ const ChatInterface = ({ initialQuery }) => {
           placeholder="Ask about recipes, cooking techniques, or ingredients..."
           disabled={loading}
         />
-        <SendButton type="submit" disabled={loading || !input.trim()}>
-          {loading ? 'Thinking...' : 'Send'}
+        <SendButton 
+          type="submit" 
+          disabled={loading || !input.trim()}
+          aria-label="Send message"
+        >
+          <SendIcon />
         </SendButton>
       </InputArea>
     </ChatContainer>
