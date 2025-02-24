@@ -7,8 +7,11 @@ import { useAI } from '../../context/AIContext';
 const Timestamp = styled.div`
   font-size: 0.75rem;
   color: ${props => props.isUser ? 'rgba(255,255,255,0.7)' : '#666'};
-  margin-top: 0.25rem; /* Reduced from 0.5rem */
   text-align: right;
+  display: inline-block;
+  float: right;
+  margin-left: 8px;
+  margin-top: 2px; /* Reduced from 4px */
 `;
 
 const ChatContainer = styled.div`
@@ -52,10 +55,10 @@ const MessagesContainer = styled.div`
 const MessageWrapper = styled.div`
   display: flex;
   align-items: center;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0; /* Removed margin-bottom since we're using gap */
   justify-content: ${props => props.isUser ? 'flex-end' : 'flex-start'};
   width: 100%;
-  max-width: 85%; /* Slightly larger to accommodate recipe content */
+  max-width: ${props => props.isUser ? '85%' : '90%'}; /* Adjusted max-width */
   align-self: ${props => props.isUser ? 'flex-end' : 'flex-start'};
 `;
 
@@ -207,15 +210,22 @@ const PlayButton = styled.button`
   color: white;
   border: none;
   border-radius: 50%;
-  width: 28px;
-  height: 28px;
-  font-size: 10px;
+  width: clamp(24px, 2vw, 28px); /* Responsive width */
+  height: clamp(24px, 2vw, 28px); /* Responsive height */
+  font-size: clamp(8px, 1vw, 10px); /* Responsive font size */
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-left: 8px;
+  margin-left: 0.5rem; /* Reduced from 8px */
   cursor: pointer;
   box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  
+  @media (max-width: 768px) {
+    width: 24px;
+    height: 24px;
+    font-size: 8px;
+    margin-left: 0.35rem;
+  }
   
   &:hover {
     background: #dc2626;
