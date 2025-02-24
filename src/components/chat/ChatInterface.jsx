@@ -69,8 +69,6 @@ const MessagesContainer = styled.div`
 const InputArea = styled.div`
   display: flex;
   padding: 1rem;
-  
-  
   position: relative;
   z-index: 2;
 `;
@@ -94,7 +92,7 @@ const SendButton = styled.button`
   margin-left: 0.5rem;
   width: 50px;
   height: 49px;
-  background: #f8a4a4;
+  background: #ef4444;
   color: white;
   border: none;
   border-radius: 5px;
@@ -102,10 +100,7 @@ const SendButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #ef4444;
   
-
-
   &:disabled {
     background: #fca5a5;
     cursor: not-allowed;
@@ -115,6 +110,31 @@ const SendButton = styled.button`
   svg {
     width: 20px;
     height: 20px;
+  }
+`;
+
+const PlayButton = styled.button`
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 8px;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  
+  &:hover {
+    background: #dc2626;
+  }
+  
+  &:disabled {
+    background: #fca5a5;
+    cursor: not-allowed;
   }
 `;
 
@@ -167,12 +187,176 @@ const SendIcon = () => (
   </svg>
 );
 
+// ElevenLabs integration
+const ELEVENLABS_API_KEY = '';
+const BILINGUAL_VOICES = [
+  { 
+    id: 'hGb0Exk8cp4vQEnwolxa',
+    name: 'Ayesha - Energetic Hindi Voice',
+    languages: ['Hindi', 'English', 'Multilingual'],
+    isIndian: true
+  },
+  { 
+    id: 'fEJqMD6Jp1JFP8T1BZpd',
+    name: 'Bhavna',
+    languages: ['Hindi','English', 'Multilingual'],
+    isIndian: true
+  },
+  { 
+    id: '3gsg3cxXyFLcGIfNbM6C',
+    name: 'Varun',
+    languages: ['Hindi', 'English'],
+    isIndian: true
+  },
+  { 
+    id: 'CwhRBWXzGAHq8TQ4Fs17',
+    name: 'Roger',
+    languages: ['Hindi', 'English', 'Multilingual'],
+    isIndian: false
+  }
+];
+
 const ChatInterface = ({ initialQuery }) => {
   const [input, setInput] = useState('');
   const { askAI, loading } = useAI();
   const messagesEndRef = useRef(null);
   const [messages, setMessages] = useState([]);
   const [initialQueryHandled, setInitialQueryHandled] = useState(false);
+  
+  // ElevenLabs TTS state
+  const [selectedVoice, setSelectedVoice] = useState('hGb0Exk8cp4vQEnwolxa'); // Default to Ayesha
+  const [ttsEnabled, setTtsEnabled] = useState(true);
+  const [speaking, setSpeaking] = useState(false);
+  const [audioElement, setAudioElement] = useState(null);
+
+  // Detect language in text (simple heuristic)
+  const detectLanguage = (text) => {
+    // Hindi characters in Unicode range
+    const hindiPattern = /[\u0900-\u097F]/;
+    
+    // If text contains Devanagari script, it's Hindi
+    if (hindiPattern.test(text)) {
+      return 'Hindi';
+    }
+    
+    // Check for common Hindi words written in Roman script
+    const romanHindiWords = [
+      'namaste', 'aap', 'kaise', 'hai', 'dhanyavaad', 'theek', 'haan', 'nahi',
+      'khana', 'acha', 'bahut', 'kya', 'maine', 'humne', 'tum', 'pyaaz', 'masala'
+    ];
+    
+    // Count Hindi words
+    let hindiWordCount = 0;
+    const words = text.toLowerCase().split(/\s+/);
+    
+    for (const word of words) {
+      if (romanHindiWords.includes(word)) {
+        hindiWordCount++;
+      }
+    }
+    
+    // If more than 15% of words are Hindi, consider it Hindi in Roman script
+    if (hindiWordCount / words.length > 0.15) {
+      return 'Hindi-Roman';
+    }
+    
+    return 'English';
+  };
+  
+  // ElevenLabs TTS function
+  const speakWithElevenLabs = async (text) => {
+    try {
+      // Stop any current speech
+      if (speaking) {
+        stopSpeaking();
+      }
+      
+      // Detect language
+      const detectedLanguage = detectLanguage(text);
+      
+      // Get optimal voice settings for the language
+      const voiceSettings = {
+        stability: 0.5,
+        similarity_boost: 0.75,
+        style: 0.25,
+        speaker_boost: true
+      };
+      
+      // For Hindi, increase stability for better pronunciation
+      if (detectedLanguage === 'Hindi' || detectedLanguage === 'Hindi-Roman') {
+        voiceSettings.stability = 0.7; // More stable for better Hindi pronunciation
+        voiceSettings.style = 0.3; // Slightly more expressive for Hindi
+      }
+      
+      // Check if API key is set
+      if (!ELEVENLABS_API_KEY) {
+        console.warn("ElevenLabs API Key not set");
+        return;
+      }
+
+      const response = await fetch(
+        `https://api.elevenlabs.io/v1/text-to-speech/${selectedVoice}`,
+        {
+          method: 'POST',
+          headers: {
+            'Accept': 'audio/mpeg',
+            'Content-Type': 'application/json',
+            'xi-api-key': ELEVENLABS_API_KEY
+          },
+          body: JSON.stringify({
+            text,
+            model_id: 'eleven_multilingual_v2',
+            voice_settings: voiceSettings
+          })
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error(`ElevenLabs API error: ${response.status}`);
+      }
+      
+      const blob = await response.blob();
+      const audioUrl = URL.createObjectURL(blob);
+      const audio = new Audio(audioUrl);
+      setAudioElement(audio);
+      
+      audio.onplay = () => {
+        setSpeaking(true);
+      };
+      audio.onended = () => {
+        setSpeaking(false);
+        if (audio.src) URL.revokeObjectURL(audio.src);
+      };
+      audio.onerror = (error) => {
+        console.error('Audio playback error:', error);
+        setSpeaking(false);
+        if (audio.src) URL.revokeObjectURL(audio.src);
+      };
+      
+      try {
+        await audio.play();
+      } catch (playError) {
+        console.error("Error playing audio:", playError);
+        // The play buttons will handle this case
+      }
+    } catch (error) {
+      console.error('ElevenLabs TTS Error:', error);
+    }
+  };
+  
+  const stopSpeaking = () => {
+    if (audioElement) {
+      audioElement.pause();
+      audioElement.currentTime = 0;
+      if (audioElement.src) URL.revokeObjectURL(audioElement.src);
+      setSpeaking(false);
+    }
+  };
+  
+  // Handle play button click
+  const handlePlay = (text) => {
+    speakWithElevenLabs(text);
+  };
 
   useEffect(() => {
     const handleInitialQuery = async () => {
@@ -213,6 +397,10 @@ const ChatInterface = ({ initialQuery }) => {
             }
           ]);
           
+          if (ttsEnabled) {
+            await speakWithElevenLabs(aiResponseText);
+          }
+          
         } catch (error) {
           console.error('Error processing initial query:', error);
           aiResponseText = "Sorry, I had trouble processing that request. Please try again.";
@@ -232,7 +420,7 @@ const ChatInterface = ({ initialQuery }) => {
     };
     
     handleInitialQuery();
-  }, [initialQuery, initialQueryHandled, askAI]); 
+  }, [initialQuery, initialQueryHandled, askAI, ttsEnabled]); 
   
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -269,6 +457,10 @@ const ChatInterface = ({ initialQuery }) => {
         id: Date.now() + 2,
         timestamp: new Date().toISOString()
       }]);
+      
+      if (ttsEnabled) {
+        await speakWithElevenLabs(responseText);
+      }
     } catch (error) {
       console.error('Error getting response:', error);
       // Replace loading message with error message
@@ -280,6 +472,13 @@ const ChatInterface = ({ initialQuery }) => {
       }]);
     }
   };
+  
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      stopSpeaking();
+    };
+  }, []);
   
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -312,6 +511,15 @@ const ChatInterface = ({ initialQuery }) => {
                 </>
               )}
             </MessageBubble>
+            {!msg.isLoading && !msg.isUser && (
+              <PlayButton 
+                onClick={() => handlePlay(msg.text)}
+                disabled={speaking}
+                title="Play message"
+              >
+                ▶
+              </PlayButton>
+            )}
           </MessageWrapper>
         ))}
         <div ref={messagesEndRef} />
