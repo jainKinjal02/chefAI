@@ -48,13 +48,13 @@ const Toast = styled.div`
 `;
 
 const Timestamp = styled.div`
-  font-size: 0.75rem;
+  font-size: 0.6rem;
   color: ${props => props.isUser ? 'rgba(255,255,255,0.7)' : '#666'};
   text-align: right;
   display: inline-block;
   float: right;
   margin-left: 8px;
-  margin-top: 2px; /* Reduced from 4px */
+  margin-top: 15px; /* Reduced from 4px */
 `;
 
 const ChatContainer = styled.div`
