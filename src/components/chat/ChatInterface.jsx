@@ -1,9 +1,52 @@
 import React, { useState, useRef, useEffect } from 'react';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { useAI } from '../../context/AIContext';
 
 
 // Styled components with improved visual hierarchy and readability
+const slideIn = keyframes`
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+`;
+
+const Toast = styled.div`
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #ef4444;
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  animation: ${slideIn} 0.3s ease-out;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 90%;
+  
+  & .close-button {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 4px;
+    margin-left: 8px;
+    opacity: 0.8;
+    
+    &:hover {
+      opacity: 1;
+    }
+  }
+`;
+
 const Timestamp = styled.div`
   font-size: 0.75rem;
   color: ${props => props.isUser ? 'rgba(255,255,255,0.7)' : '#666'};
@@ -238,30 +281,6 @@ const PlayButton = styled.button`
   }
 `;
 
-// Quick reply suggestions
-const QuickReplies = styled.div`
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-  flex-wrap: wrap;
-  justify-content: center;
-`;
-
-const QuickReplyButton = styled.button`
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: 16px;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  
-  &:hover {
-    background: rgba(239, 68, 68, 0.2);
-  }
-`;
-
 // Loading indicator component
 const LoadingIndicator = styled.div`
   display: flex;
@@ -392,14 +411,6 @@ const formatRecipeContent = (text) => {
   return text;
 };
 
-// Suggested quick replies for cooking questions
-const QUICK_REPLY_SUGGESTIONS = [
-  "Quick dinner ideas",
-  "How to make pasta sauce",
-  "Vegetarian recipes",
-  "Cooking tips for beginners",
-  "Best spices for chicken"
-];
 
 const ChatInterface = ({ initialQuery }) => {
   const [input, setInput] = useState('');
@@ -407,7 +418,7 @@ const ChatInterface = ({ initialQuery }) => {
   const messagesEndRef = useRef(null);
   const [messages, setMessages] = useState([]);
   const [initialQueryHandled, setInitialQueryHandled] = useState(false);
-  const [quickReplies, setQuickReplies] = useState(QUICK_REPLY_SUGGESTIONS);
+  const [errorToast, setErrorToast] = useState(null);
   
   // ElevenLabs TTS state
   const [selectedVoice, setSelectedVoice] = useState('hGb0Exk8cp4vQEnwolxa'); // Default to Ayesha
@@ -448,6 +459,27 @@ const ChatInterface = ({ initialQuery }) => {
     
     return 'English';
   };
+
+  const handleError = (error) => {
+    let errorMessage = "Something went wrong. Please try again.";
+    
+    if (error.message?.includes('network')) {
+      errorMessage = "Network error. Please check your internet connection.";
+    } else if (error.message?.includes('timeout')) {
+      errorMessage = "Request timed out. Please try again.";
+    } else if (error.response?.status === 429) {
+      errorMessage = "Too many requests. Please wait a moment before trying again.";
+    } else if (error.response?.status === 401) {
+      errorMessage = "Authentication error. Please check your API key.";
+    }
+    
+    setErrorToast(errorMessage);
+    
+    // Auto-hide toast after 5 seconds
+    setTimeout(() => {
+      setErrorToast(null);
+    }, 5000);
+  };
   
   // ElevenLabs TTS function
   const speakWithElevenLabs = async (text) => {
@@ -460,32 +492,21 @@ const ChatInterface = ({ initialQuery }) => {
       // Extract plain text if it's HTML content
       let plainText = text;
       if (typeof text !== 'string') {
-        // If it's a React element (formatted recipe), convert to plain text representation
         plainText = "Here's your recipe. Please check the chat for formatted details.";
-      }
-      
-      // Detect language
-      const detectedLanguage = detectLanguage(plainText);
-      
-      // Get optimal voice settings for the language
-      const voiceSettings = {
-        stability: 0.5,
-        similarity_boost: 0.75,
-        style: 0.25,
-        speaker_boost: true
-      };
-      
-      // For Hindi, increase stability for better pronunciation
-      if (detectedLanguage === 'Hindi' || detectedLanguage === 'Hindi-Roman') {
-        voiceSettings.stability = 0.7; // More stable for better Hindi pronunciation
-        voiceSettings.style = 0.3; // Slightly more expressive for Hindi
       }
       
       // Check if API key is set
       if (!ELEVENLABS_API_KEY) {
-        console.warn("ElevenLabs API Key not set");
-        return;
+        throw new Error('ElevenLabs API Key not configured');
       }
+
+      const detectedLanguage = detectLanguage(plainText);
+      const voiceSettings = {
+        stability: detectedLanguage.includes('Hindi') ? 0.7 : 0.5,
+        similarity_boost: 0.75,
+        style: detectedLanguage.includes('Hindi') ? 0.3 : 0.25,
+        speaker_boost: true
+      };
 
       const response = await fetch(
         `https://api.elevenlabs.io/v1/text-to-speech/${selectedVoice}`,
@@ -513,75 +534,63 @@ const ChatInterface = ({ initialQuery }) => {
       const audio = new Audio(audioUrl);
       setAudioElement(audio);
       
-      audio.onplay = () => {
-        setSpeaking(true);
-      };
+      audio.onplay = () => setSpeaking(true);
       audio.onended = () => {
         setSpeaking(false);
-        if (audio.src) URL.revokeObjectURL(audio.src);
+        URL.revokeObjectURL(audio.src);
       };
       audio.onerror = (error) => {
-        console.error('Audio playback error:', error);
+        handleError(new Error('Audio playback failed'));
         setSpeaking(false);
-        if (audio.src) URL.revokeObjectURL(audio.src);
+        URL.revokeObjectURL(audio.src);
       };
       
-      try {
-        await audio.play();
-      } catch (playError) {
-        console.error("Error playing audio:", playError);
-        // The play buttons will handle this case
-      }
+      await audio.play();
     } catch (error) {
       console.error('ElevenLabs TTS Error:', error);
-    }
-  };
-  
-  const stopSpeaking = () => {
-    if (audioElement) {
-      audioElement.pause();
-      audioElement.currentTime = 0;
-      if (audioElement.src) URL.revokeObjectURL(audioElement.src);
+      let errorMessage;
+      
+      switch(true) {
+        case error.message.includes('API Key not configured'):
+          errorMessage = "Text-to-speech is not configured. Please check API settings.";
+          break;
+        case error.message.includes('API error: 429'):
+          errorMessage = "Text-to-speech quota exceeded. Please try again later.";
+          break;
+        case error.message.includes('API error: 401'):
+          errorMessage = "Text-to-speech authentication failed. Please check API key.";
+          break;
+        case error.message.includes('playback failed'):
+          errorMessage = "Audio playback failed. Please try again.";
+          break;
+        default:
+          errorMessage = "Text-to-speech service unavailable. Please try again later.";
+      }
+      
+      handleError({ message: errorMessage });
       setSpeaking(false);
     }
   };
   
+const stopSpeaking = () => {
+  if (audioElement) {
+    try {
+      audioElement.pause();
+      audioElement.currentTime = 0;
+      if (audioElement.src) {
+        URL.revokeObjectURL(audioElement.src);
+      }
+    } catch (error) {
+      handleError({ message: "Error stopping audio playback" });
+    } finally {
+      setSpeaking(false);
+    }
+  }
+};
+  
   // Handle play button click
   const handlePlay = (text) => {
     speakWithElevenLabs(text);
-  };
-
-  // Generate context-aware quick replies based on conversation
-  const generateQuickReplies = (lastBotMessage) => {
-    // Detect if the message contains food-related terms
-    const foodTerms = ['recipe', 'cook', 'food', 'ingredient', 'dish', 'meal', 'cuisine'];
-    
-    let newReplies = [...QUICK_REPLY_SUGGESTIONS];
-    
-    if (typeof lastBotMessage === 'string') {
-      // Check if the message mentions specific foods
-      const foodMatches = lastBotMessage.match(/\b(chicken|pasta|rice|vegetable|beef|fish|salad|soup|bread|dessert)\b/gi);
-      
-      if (foodMatches && foodMatches.length > 0) {
-        // Create contextual quick replies based on mentioned foods
-        const uniqueFoods = [...new Set(foodMatches.map(match => match.toLowerCase()))];
-        
-        newReplies = uniqueFoods.map(food => {
-          const suggestions = [
-            `How to cook ${food}?`,
-            `Best ${food} recipes`,
-            `Healthy ${food} ideas`,
-            `Quick ${food} meal`
-          ];
-          return suggestions[Math.floor(Math.random() * suggestions.length)];
-        }).slice(0, 3);
-        
-        // Add a couple of general suggestions
-        newReplies.push(...QUICK_REPLY_SUGGESTIONS.slice(0, 2));
-      }
-    }
-    
-    return newReplies;
   };
 
   useEffect(() => {
@@ -626,27 +635,15 @@ const ChatInterface = ({ initialQuery }) => {
             }
           ]);
           
-          // Update quick replies based on response
-          setQuickReplies(generateQuickReplies(aiResponseText));
-          
           if (ttsEnabled) {
             await speakWithElevenLabs(aiResponseText);
           }
           
         } catch (error) {
           console.error('Error processing initial query:', error);
-          aiResponseText = "Sorry, I had trouble processing that request. Please try again.";
-          
+          handleError(error);
           // Replace loading message with error message
-          setMessages(prev => [
-            prev[0],
-            {
-              text: aiResponseText,
-              isUser: false,
-              id: Date.now() + 2,
-              timestamp: new Date().toISOString()
-            }
-          ]);
+          setMessages(prev => [prev[0]]);
         }
       }
     };
@@ -693,21 +690,14 @@ const ChatInterface = ({ initialQuery }) => {
         timestamp: new Date().toISOString()
       }]);
       
-      // Update quick replies based on response
-      setQuickReplies(generateQuickReplies(responseText));
-      
       if (ttsEnabled) {
         await speakWithElevenLabs(responseText);
       }
     } catch (error) {
       console.error('Error getting response:', error);
+      handleError(error);
       // Replace loading message with error message
-      setMessages(prev => [...prev.slice(0, -1), { 
-        text: "Sorry, I had trouble processing that request. Please try again.", 
-        isUser: false,
-        id: Date.now() + 2,
-        timestamp: new Date().toISOString()
-      }]);
+      setMessages(prev => prev.filter(msg => !msg.isLoading));
     }
   };
   
@@ -730,6 +720,18 @@ const ChatInterface = ({ initialQuery }) => {
   }, [messages]);
   
   return (
+    <>
+    {errorToast && (
+      <Toast>
+        <span>⚠️ {errorToast}</span>
+        <button 
+          className="close-button"
+          onClick={() => setErrorToast(null)}
+        >
+          ✕
+        </button>
+      </Toast>
+    )}
     <ChatContainer>
       <MessagesContainer>
         {messages.map((msg) => (
@@ -786,6 +788,7 @@ const ChatInterface = ({ initialQuery }) => {
         </SendButton>
       </InputArea>
     </ChatContainer>
+    </>
   );
 };
 
